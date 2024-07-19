@@ -1,0 +1,522 @@
+<!DOCTYPE HTML>
+<!--
+	Solid State by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Agriculture Land Use - Ramadharsh Vanchinathan</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Page Wrapper -->
+			<div id="page-wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<h1><a href="index.html">Ramadharsh Vanchinathan</a></h1>
+						<nav>
+							<a href="#menu">Menu</a>
+						</nav>
+					</header>
+
+				<!-- Menu -->
+					<nav id="menu">
+						<div class="inner">
+							<h2>Menu</h2>
+							<ul class="links">
+								<li><a href="index.html">Home</a></li>
+								<li><a href="portfolio.html">Portfolio</a></li>
+								<li><a href="blog.html">Blog</a></li>
+							</ul>
+							<a href="#" class="close">Close</a>
+						</div>
+					</nav>
+
+				<!-- Wrapper -->
+					<section id="wrapper">
+						<header>
+							<div class="inner">
+								<h2>Project 1: Agricultural Land Use Data Analysis</h2>
+								<p>Using USDA Crop Land value and Crop Yield to determine where to invest into Crop Land. 
+								<br><a href="https://github.com/adharshvanchi/portfolio/blob/c9fe6ff613a00ec4cf72a224fd5beb95f6221642/Data%20Analyst/agri_land_dashboard/Project_1_Writeup.ipynb">Github Link</a>
+								<br><a href="https://app.powerbi.com/view?r=eyJrIjoiZmZjNzM2ZDQtYjA4OC00YzY4LWI1ZGQtNThmMWQyOTE5NTFjIiwidCI6ImJhNTkzNWM2LTI5OTQtNGJhZS1hYzJhLTAyMGI5N2IyNTczNCIsImMiOjJ9&pageName=5a514db2ffde38ce2746">Power BI Report</a></p>
+							</div>
+						</header>
+
+						<!-- Content -->
+							<div class="wrapper">
+								<div class="inner">
+
+									<h2 class="major">Project Objective</h2>
+									<p>Investigate the relationship between agricultural cropland value and crop yield. The target audience or stakeholders for this project are prospective crop land investors looking to choose the best state to invest in crop land. Some of the questions I wanted to investigate include: What are the states with high crop yield to acre value ratios? What are the trends in both key metrics over time? Which States and Regions had the highest Acre Values, Crop Yields and Crop Yield to Acre Value Ratios? I also wanted a map of the states with a gradient of Acre Value and Crop Yield to get an intuitive visual of the patterns. Acre Value, gathered from Kaggle.com, does not contain most of New England as these states weren't in the dataset. Crop Yield was gathered from USDA's National Agricultural Statistics Service(NASS) Quick Stats, which is their self service data mart. The time frame of the data is from 2007-2017.</p>
+									<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+									</div><div class="inner_cell">
+									<div class="text_cell_render border-box-sizing rendered_html">
+									<h2 id="Python" class="major">Python</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Acre-Value">Acre Value</h3><p>I am the most comfortable working with python, so that's where I began. I used it to ingest the downloaded data, clean it, and load it into the SQL server. The first thing I did was download the Acre Value data from Kaggle and the Crop Yield data from USDA's NASS Quick Stats, both as csv files. After importing the necessary libraries, I ingested the csv data into a DataFrame, removed unnecessary rows and columns, removed any NA/Null values and reset the index for the next steps for the three Acre Value data.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [2]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">'display.max_columns'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Constant of Region Names</span>
+<span class="n">REGIONS</span><span class="o">=</span> <span class="p">(</span><span class="s2">"Northeast"</span><span class="p">,</span> <span class="s2">"Lake"</span><span class="p">,</span> <span class="s2">"Corn Belt"</span><span class="p">,</span> <span class="s2">"Northern Plains"</span><span class="p">,</span> <span class="s2">"Appalachian"</span><span class="p">,</span> <span class="s2">"Southeast"</span><span class="p">,</span> <span class="s2">"Delta"</span><span class="p">,</span> <span class="s2"><br>"Southern Plains"</span><span class="p">,</span> <span class="s2">"Mountain"</span><span class="p">,</span> <span class="s2">"Pacific"</span><span class="p">)</span>
+
+<span class="c1"># Pull in cropland data </span>
+<span class="n">cropland_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'data\Combined Data - Cropland.csv'</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+<span class="c1"># Remove junk columns</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'2'</span><span class="p">,</span><span class="s1">'h'</span><span class="p">,</span><span class="s1">'2016-2017'</span><span class="p">],</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Remove random characters</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'[1234567890]/'</span><span class="p">,</span> <span class="s1">''</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Drop NA values and reset index</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[2]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result"><div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Region and state</th>
+<th>1997</th>
+<th>1998</th>
+<th>1999</th>
+<th>2000</th>
+<th>2001</th>
+<th>2002</th>
+<th>2003</th>
+<th>2004</th>
+<th>2005</th>
+<th>2006</th>
+<th>2007</th>
+<th>2008</th>
+<th>2009</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Northeast</td>
+<td>2590.0</td>
+<td>2620.0</td>
+<td>2700.0</td>
+<td>2690.0</td>
+<td>2820.0</td>
+<td>3210.0</td>
+<td>3400.0</td>
+<td>3800.0</td>
+<td>4320</td>
+<td>4970</td>
+<td>5350</td>
+<td>5590</td>
+<td>5340</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Delaware</td>
+<td>2500.0</td>
+<td>2620.0</td>
+<td>2700.0</td>
+<td>3000.0</td>
+<td>3250.0</td>
+<td>3500.0</td>
+<td>3850.0</td>
+<td>5700.0</td>
+<td>8100</td>
+<td>10000</td>
+<td>10200</td>
+<td>9800</td>
+<td>8500</td>
+</tr>
+<tr>
+<th>2</th>
+<td>Maryland</td>
+<td>3050.0</td>
+<td>3100.0</td>
+<td>3200.0</td>
+<td>3500.0</td>
+<td>3700.0</td>
+<td>3900.0</td>
+<td>4000.0</td>
+<td>5600.0</td>
+<td>7200</td>
+<td>8200</td>
+<td>8400</td>
+<td>7800</td>
+<td>7300</td>
+</tr>
+<tr>
+<th>3</th>
+<td>New Jersey</td>
+<td>8500.0</td>
+<td>8000.0</td>
+<td>7800.0</td>
+<td>8400.0</td>
+<td>8700.0</td>
+<td>9000.0</td>
+<td>9300.0</td>
+<td>9900.0</td>
+<td>13000</td>
+<td>14900</td>
+<td>16000</td>
+<td>15600</td>
+<td>14000</td>
+</tr>
+</tbody>
+</table>
+</div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Taking a look at the data format showed that it needs to be melted such that each row contains the state, region, year, and acre value. So, next I extracted the indices of all rows with a region instead of a state along with the last row and assigned them to a list to do the melt mentioned above.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [3]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Get the rows for each region</span>
+<span class="n">cropland_reg</span> <span class="o">=</span> <span class="n">cropland_df</span><span class="p">[</span><span class="n">cropland_df</span><span class="p">[</span><span class="s1">'Region and state'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">REGIONS</span><span class="p">)]</span>
+
+<span class="c1"># Make a list of the indices of each region's row</span>
+<span class="n">cropland_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cropland_reg</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+<span class="c1"># Append the last row of each dataframe</span>
+<span class="n">cropland_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cropland_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">cropland_list</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[3]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>[0, 7, 11, 17, 22, 28, 33, 37, 40, 49, 54]</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Using the list of indices, I created a dictionary of each region name along with the first and last state's index in that region. (i.e. cropland_df contains 'Northeast' states in indices 1 through 7.)</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [4]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Instantiate index dictionaries for each dataframe</span>
+<span class="n">cropland_idx_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># For the each element of cropland_list, create a new entry in the index dictionary with the first and last <br>index of that region's states (i.e. 'Northeast': [1, 7])</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">cropland_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+  <span class="n">cropland_idx_dict</span><span class="p">[</span><span class="n">REGIONS</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">cropland_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">cropland_list</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]</span>
+
+<span class="n">cropland_idx_dict</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[4]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>{'Northeast': [1, 7],
+ 'Lake': [8, 11],
+ 'Corn Belt': [12, 17],
+ 'Northern Plains': [18, 22],
+ 'Appalachian': [23, 28],
+ 'Southeast': [29, 33],
+ 'Delta': [34, 37],
+ 'Southern Plains': [38, 40],
+ 'Mountain': [41, 49],
+ 'Pacific': [50, 54]}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Renamed the "Region and state" column to "State" and created a new column called "Region". Iterated through the index dictionary's keys, which are region names, created in the previous block to assign the 'Region' value to all the rows, then dropped all rows with index in region index list so the remaining rows only have state names in newly renamed "State" column. Finally, I dropped the last row in each table, which had the US cumulative data and reset the indices. This process was completed for each DataFrame.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [5]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Rename 'Region and state' column to 'State' and create new 'Region' Column</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">'Region and state'</span><span class="p">:</span><span class="s1">'State'</span><span class="p">},</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cropland_df</span><span class="p">[</span><span class="s1">'Region'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">''</span>
+<span class="c1"># for each region, assign the region's name to 'Region' Column</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cropland_idx_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+  <span class="n">cropland_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cropland_idx_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cropland_idx_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'Region'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+<span class="c1"># Drop all rows that contain the regional data</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">cropland_list</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Drop row that contains cumulative US data and reset index</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">53</span><span class="p">],</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cropland_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Melted the DataFrames so that the State and Region columns remain untouched, and each row only has one Acre Value and a corresponding year. (i.e. "California", "Pacific", "2017", "2700.0"). Then cleaned up the DataFrame (forcing Acre Value to be a numeric, and dropping any NA values), added Land Use column and reset index one final time for each dataframe. Finally, all three dataframes are concatenated into "df".</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [6]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Melt dataframe so each row only has one year and one acre value, convert acre value to numeric, and drop all<br> NAs</span>
+<span class="n">cropland</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">cropland_df</span><span class="p">,</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s1">'State'</span><span class="p">,</span><span class="s1">'Region'</span><span class="p">],</span><span class="n">var_name</span><span class="o">=</span><span class="s1">'Year'</span><span class="p">,</span><span class="n">value_name</span><span class="o">=</span><span class="s1">'Acre Value'</span><span class="p">)</span>
+<span class="n">cropland</span><span class="p">[</span><span class="s1">'Acre Value'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">cropland</span><span class="p">[</span><span class="s1">'Acre Value'</span><span class="p">],</span><span class="n">errors</span><span class="o">=</span><span class="s1">'coerce'</span><span class="p">)</span>
+<span class="n">cropland</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Assign Land use as Cropland and reset index</span>
+<span class="n">cropland</span><span class="p">[</span><span class="s1">'Land Use'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'Cropland'</span>
+<span class="n">cropland</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The last python step for Acre Value was to establish an ODBC connection to the SQL server on my local machine ('ADHARSHVANCHI-P'), and using the pandas <code>to_sql</code> function to load the data into its table. Just as a check, I run a quick query to trim any whitespaces at the beginning or end of the data.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [20]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Initalize SQL Connection</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">MetaData</span><span class="p">()</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s2">"mssql+pyodbc://ADHARSHVANCHI-P/Agricultural_Land_Data?driver=ODBC+Driver+17+for+SQL+<br>Server"</span><span class="p">)</span>
+
+<span class="c1"># Load final table into SQL as agricultural_landvalue</span>
+<span class="n">cropland</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="s1">'agricultural_landvalue'</span><span class="p">,</span><span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span><span class="n">if_exists</span><span class="o">=</span><span class="s1">'replace'</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Update table by removing leading and trailing whitespaces</span>
+<span class="k">with</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">connection</span><span class="p">:</span>
+    <span class="n">connection</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">"UPDATE agricultural_landvalue SET state = TRIM(state)"</span><span class="p">))</span>
+    <span class="n">connection</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Crop-Yield">Crop Yield</h3><p>For Crop Yield, I ingested the data, filtered only for the columns that are relevant to my analysis, dropped any NA/Null values, reset the index, renamed the 'Value' column to 'Crop Yield' for ease of use, converted the all upper case state names (i.e. 'NEVADA') to match the title case of the Acre Value dataset (i.e. 'Nevada') and loaded the data into SQL with the same method as the Acre Value dataset.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [21]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">cropprod_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'data\Crop Production in $.csv'</span><span class="p">)</span>
+<span class="n">cropprod_df</span> <span class="o">=</span> <span class="n">cropprod_df</span><span class="p">[[</span><span class="s1">'Year'</span><span class="p">,</span><span class="s1">'State'</span><span class="p">,</span><span class="s1">'Value'</span><span class="p">]]</span>
+<span class="n">cropprod_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cropprod_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cropprod_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">'Value'</span><span class="p">:</span><span class="s1">'Crop Yield'</span><span class="p">},</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cropprod_df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span> <span class="o">=</span> <span class="n">cropprod_df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+<span class="n">cropprod_df</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="s1">'crop_production'</span><span class="p">,</span><span class="n">con</span><span class="o">=</span><span class="n">engine</span><span class="p">,</span><span class="n">if_exists</span><span class="o">=</span><span class="s1">'replace'</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[21]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>528</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="SQL-Component" class="major">SQL Component</h2><p>Once both Datasets were loaded into the Database "Agricultural Land Value", I created a new view named "VW_Ag_Land" which joined agricultural_landvalue and crop_production on columns year and state. This view is what was pulled into PowerBI to create the visuals.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="PowerBI-Visualization-Explanations" class="major">PowerBI Visualization Explanations</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Page-1:-Overview">Page 1: Overview</h3><p>This page shows all the available data as a scatterplot with Acre Value on the x-axis and Crop Yield on the y-axis. On the right side, there are slicers to filter states and years. Looking at the visual, we can see that California is notably higher in both Crop yield and Acre Value. Conversely, New Jersey has very high acre values for very low crop yields, making it a poor investment candidate.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Page-2:-Crop-Yield-to-Acre-Value-Ratio-Bar-Graph">Page 2: Crop Yield to Acre Value Ratio Bar Graph</h3><p>This visual is to rank the states by Acre Value, Crop Yield and Crop Yield to Acre Value Ratio. The top three candidate states I would recommend based on the insights on the third graph would be North Dakota, Texas and Kansas as these states have the highest crop yield to acre value ratios.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Page-3:-Value-and-Yield-over-Time-by-Region">Page 3: Value and Yield over Time by Region</h3><p>The top graph shows Average Acre Value over Time. As the first page indicated, New Jersey is the highest valued throught the entire time frame. Hovering over the graph shows a table of the top 5 states by Average Acre Value for that given year.</p>
+<p>The middle graph shows crop value over time. Here we see Calidfornia along with many of the bread basket states, which is to be expected. Hovering here shows a similar custom tooltip, but with Average Crop Yield.</p>
+<p>The bottom graph shows Crop Yield/Acre Value as a ratio to determine, on average, which states have the highest return on land value. Surprisingly to me, North Dakota led the pack from 2007-2013, and continued to be top three for the remainder of the time frame. This graph is the most useful in determining what states to consider for cropland investment. Looking at the states I recommend based on the bar graph, we see that all three of them have been in the top 5 over the entire timeframe of the dataset.</p>
+<p>The States Slicer on the right lets users compare their selection of states over the timeframe.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Page-4:-Map-of-Crop-Yield-to-Acre-Value-Ratio">Page 4: Map of Crop Yield to Acre Value Ratio</h3>
+<p>This map visualizes the geographic distribution of the Crop Yield to Acre Value ratio with a year slicer to tunnel down in user specified time windows. As noted in the project overview, most of New England is not part of the dataset, as visible here.</p>
+<a href="#" class="image"><img src="images/pbi_map.png" alt="" /></a>
+<p>Note: The map does not appear in the <a href="https://app.powerbi.com/view?r=eyJrIjoiZmZjNzM2ZDQtYjA4OC00YzY4LWI1ZGQtNThmMWQyOTE5NTFjIiwidCI6ImJhNTkzNWM2LTI5OTQtNGJhZS1hYzJhLTAyMGI5N2IyNTczNCIsImMiOjJ9&pageName=5a514db2ffde38ce2746">link</a> to the Power BI report.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Answers-to-Questions-from-Project-Overview">Answers to Questions from Project Overview</h2><p>What are the trends in both key metrics over time?</p>
+<p>Removing California and New Jersey from the visuals on Page 2 shows that Crop Yield is generally stable while Acre Value is slightly increasing over time.</p>
+<p>Which States and Regions had the highest Acre Values, Crop Yields and Crop Yield to Acre Value Ratios?</p>
+<p>Acre Value:</p>
+<ol>
+<li>New Jersey</li>
+<li>California</li>
+<li>Arizona</li>
+</ol>
+<p>Crop Yield:</p>
+<ol>
+<li>California</li>
+<li>Iowa</li>
+<li>Illinois</li>
+</ol>
+<p>Crop Yield to Acre Value:</p>
+<ol>
+<li>North Dakota</li>
+<li>Kansas</li>
+<li>Texas</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+						</div>
+							</div>
+
+					</section>
+
+				<!-- Footer -->
+					<section id="footer">
+						<div class="inner">
+							<h2 class="major">Info</h2>
+							<ul class="contact">
+								<li class="icon solid fa-home">
+									Houston, TX
+								</li>
+								<li class="icon regular fa-clipboard"><a href="assets\AdharshVanchinathanResume.pdf">Resume</a></li>
+								<li class="icon solid fa-envelope"><a href="mailto:adharsh@gmail.com">adharsh@gmail.com</a></li>
+								<li class="icon brands fa-linkedin"><a href="https://www.linkedin.com/in/ramadharsh-vanchinathan-b2139b1a9/">LinkedIn</a></li>
+								<li class="icon brands fa-github"><a href="https://github.com/adharshvanchi">GitHub</a></li>
+							</ul>
+							<ul class="copyright">
+								<li>&copy; Untitled Inc. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</section>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
